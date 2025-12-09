@@ -18,6 +18,10 @@ The supported desktops are:
 - Most Wayland compositors (set only, requires swaybg)
 - i3 (set only, requires feh)
 
+## Credits
+
+This project is a maintained fork of the [wallpaper](https://github.com/reujab/wallpaper.rs) crate. We would like to acknowledge the work of the original authors, who dedicated their code to the public domain via The Unlicense.
+
 ## Examples
 
 ```rust

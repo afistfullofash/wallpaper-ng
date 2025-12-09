@@ -16,6 +16,7 @@ pub enum Error {
     #[error("Enquote error: {0}")]
     Enquote(#[from] enquote::Error),
 
+    #[cfg(feature = "from_url")]
     #[error("HTTP request error: {0}")]
     Reqwest(#[from] reqwest::Error),
 
