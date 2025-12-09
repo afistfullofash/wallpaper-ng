@@ -1,4 +1,4 @@
-# wallpaper [![crate](https://img.shields.io/crates/v/wallpaper.svg)](https://crates.io/crates/wallpaper) [![docs](https://docs.rs/wallpaper/badge.svg)](https://docs.rs/wallpaper)
+# wallpaper
 
 This Rust library gets and sets the desktop wallpaper/background.
 
