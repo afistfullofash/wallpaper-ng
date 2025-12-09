@@ -1,10 +1,10 @@
 [package]
-name = "wallpaper-rs"
+name = "wallpaper-ng"
 version = "0.1.0"
 edition = "2018"
 authors = ["David Población Criado <davidpblcrd@protonmail.com>", "reujab <reujab@gmail.com>"]
 description = "Gets and sets the desktop wallpaper/background."
-repository = "https://github.com/davidpob99/wallpaper.rs"
+repository = "https://github.com/davidpob99/wallpaper-ng"
 readme = "readme.md"
 keywords = ["desktop", "wallpaper", "background"]
 categories = ["api-bindings"]
