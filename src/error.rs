@@ -14,6 +14,7 @@ pub enum Error {
     #[error("Invalid INI: {0}")]
     InvalidIni(#[from] ini::Error),
 
+    #[cfg(unix)]
     #[error("Enquote error: {0}")]
     Enquote(#[from] enquote::Error),
 
