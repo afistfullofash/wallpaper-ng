@@ -17,10 +17,19 @@
 //!
 //! # Example
 //! ```
-//!println!("{:?}", wallpaper::get());
-//!wallpaper::set_from_path("/usr/share/backgrounds/gnome/adwaita-day.png").unwrap();
-//!wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-//!println!("{:?}", wallpaper::get());
+//! println!("{:?}", wallpaper_ng::get());
+//!
+//! wallpaper_ng::set_from_path("./tests/wallpapers/rust-logo.png").unwrap();
+//!
+//! // Setting the wallpaper crop mode is unsupported on some desktops
+//! match (wallpaper_ng::set_mode(wallpaper_ng::Mode::Crop)) {
+//!   Ok(()) => assert!(true),
+//!   Err(e) => match e {
+//!     wallpaper_ng::Error::UnsupportedDesktop => assert!(true),
+//!     _ => assert!(false)
+//!   }
+//! };
+//! println!("{:?}", wallpaper_ng::get());
 //! ```
 
 mod error;
