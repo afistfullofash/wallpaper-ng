@@ -1,4 +1,5 @@
-use crate::{get_stdout, run, Error, Mode, Result};
+use crate::unix::{get_stdout, run};
+use crate::{Error, Mode, Result};
 use std::path::Path;
 
 fn get_desktop_props(key: &str) -> Result<Vec<String>> {

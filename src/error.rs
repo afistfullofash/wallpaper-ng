@@ -1,6 +1,10 @@
-use std::{io, string::FromUtf8Error};
-use thiserror::Error;
 use reqwest::Error as ReqwestError;
+use std::{io, string::FromUtf8Error};
+
+#[cfg(windows)]
+use std::string::FromUtf16Error;
+
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -10,6 +14,10 @@ pub enum Error {
 
     #[error("Invalid UTF-8: {0}")]
     InvalidUtf8(#[from] FromUtf8Error),
+
+    #[cfg(windows)]
+    #[error("Invalid UTF-16: {0}")]
+    InvalidUtf16(#[from] FromUtf16Error),
 
     #[cfg(all(unix, not(target_os = "macos")))]
     #[error("Invalid INI: {0}")]
@@ -47,7 +55,6 @@ pub enum Error {
 
     #[error("Network request failed: {0}")]
     Reqwest(#[from] ReqwestError),
-
 }
 
 impl From<&str> for Error {

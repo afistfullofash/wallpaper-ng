@@ -1,17 +1,17 @@
 [package]
-name = "wallpaper-ng"
-version = "0.1.1"
+name = "wallpaper-bce"
+version = "0.2.0"
 edition = "2018"
-authors = ["David Población Criado <davidpblcrd@protonmail.com>", "reujab <reujab@gmail.com>"]
+authors = ["Natalie Ashley Hekate <natalie.hekate@pm.me>", "David Población Criado <davidpblcrd@protonmail.com>", "reujab <reujab@gmail.com>"]
 description = "Gets and sets the desktop wallpaper/background."
-repository = "https://github.com/davidpob99/wallpaper-ng"
+repository = "https://github.com/afistfullofash/wallpaper-bce"
 readme = "readme.md"
 keywords = ["desktop", "wallpaper", "background"]
 categories = ["api-bindings"]
 license = "Apache-2.0"
 
 [dependencies]
-dirs = { version = "1", optional = true }
+dirs = { version = "6", optional = true }
 thiserror = "2"
 reqwest = { version = "0.12.4", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
@@ -21,6 +21,7 @@ enquote = "1"
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 rust-ini = "0.21"
 dirs = "6"
+which = "8.0.2"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser"] }
