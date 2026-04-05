@@ -1,5 +1,6 @@
 use std::{io, string::FromUtf8Error};
 use thiserror::Error;
+use reqwest::Error as ReqwestError;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -40,4 +41,17 @@ pub enum Error {
 
     #[error("Invalid path")]
     InvalidPath,
+
+    #[error("{0}")]
+    Message(String),
+
+    #[error("Network request failed: {0}")]
+    Reqwest(#[from] ReqwestError),
+
+}
+
+impl From<&str> for Error {
+    fn from(s: &str) -> Self {
+        Error::Message(s.to_string())
+    }
 }
