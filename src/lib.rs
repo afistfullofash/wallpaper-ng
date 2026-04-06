@@ -17,40 +17,58 @@
 //!
 //! # Example
 //! ```
-//!println!("{:?}", wallpaper::get());
-//!wallpaper::set_from_path("/usr/share/backgrounds/gnome/adwaita-day.png").unwrap();
-//!wallpaper::set_mode(wallpaper::Mode::Crop).unwrap();
-//!println!("{:?}", wallpaper::get());
+//!  if wallpaper_bce::supports_get() {
+//!    println!("{:?}", wallpaper_bce::get());
+//!  }
+//!
+//!  if wallpaper_bce::supports_set() {
+//!    let path = "./tests/wallpapers/rust-logo.png";
+//!    wallpaper_bce::set_from_path(path).unwrap();
+//!    if wallpaper_bce::supports_get() {
+//!       assert!(wallpaper_bce::get().unwrap() == path, "Wallpaper was not set correctly")
+//!    }
+//!  }
+//!
+//!  if wallpaper_bce::supports_mode() {
+//!    wallpaper_bce::set_mode(wallpaper_bce::Mode::Crop).unwrap();
+//!  }
+//!
+//!  if wallpaper_bce::supports_get() {
+//!    println!("{:?}", wallpaper_bce::get());
+//!  }
 //! ```
 
 mod error;
 pub use error::Error;
 
+#[cfg(unix)]
+mod unix;
+
 #[cfg(all(unix, not(target_os = "macos")))]
 mod linux;
 
 #[cfg(all(unix, not(target_os = "macos")))]
-pub use crate::linux::*;
+use crate::linux as platform;
 
 // macos
 #[cfg(target_os = "macos")]
 mod macos;
 
 #[cfg(target_os = "macos")]
-pub use macos::*;
+use macos as platform;
 
 #[cfg(windows)]
 mod windows;
 
 #[cfg(windows)]
-pub use windows::*;
+use windows as platform;
 
 // unsupported
 #[cfg(not(any(unix, windows)))]
 mod unsupported;
 
 #[cfg(not(any(unix, windows)))]
-pub use unsupported::*;
+use unsupported as platform;
 
 // from_url feature
 #[cfg(feature = "from_url")]
@@ -71,23 +89,43 @@ pub enum Mode {
     Tile,
 }
 
-#[cfg(unix)]
-fn get_stdout(command: &str, args: &[&str]) -> Result<String> {
-    use std::process::Command;
-
-    let output = Command::new(command).args(args).output()?;
-    if output.status.success() {
-        Ok(String::from_utf8(output.stdout)?.trim().into())
-    } else {
-        Err(Error::CommandFailed {
-            command: command.to_string(),
-            code: output.status.code().unwrap_or(-1),
-        })
-    }
+/// Returns whether the current target/platform implementation can read wallpapers.
+pub fn supports_get() -> bool {
+    platform::supports_get()
 }
 
-#[cfg(unix)]
-#[inline]
-fn run(command: &str, args: &[&str]) -> Result<()> {
-    get_stdout(command, args).map(|_| ())
+/// Returns whether the current target/platform implementation can set wallpaper mode.
+pub fn supports_mode() -> bool {
+    platform::supports_mode()
+}
+
+/// Returns whether the current target/platform implementation can set wallpapers.
+pub fn supports_set() -> bool {
+    platform::supports_set()
+}
+
+/// Returns whether URL-based wallpaper setting is available.
+pub fn supports_url() -> bool {
+    platform::supports_url()
+}
+
+/// Returns the current wallpaper path.
+pub fn get() -> Result<String> {
+    platform::get()
+}
+
+/// Sets the wallpaper from a local file path.
+pub fn set_from_path(path: &str) -> Result<()> {
+    platform::set_from_path(path)
+}
+
+#[cfg(feature = "from_url")]
+/// Sets the wallpaper from a URL.
+pub fn set_from_url(url: &str) -> Result<()> {
+    platform::set_from_url(url)
+}
+
+/// Sets the wallpaper display mode.
+pub fn set_mode(mode: Mode) -> Result<()> {
+    platform::set_mode(mode)
 }

@@ -8,5 +8,9 @@ pub fn download_image(url: &str) -> Result<String> {
     let mut file = File::create(&file_path)?;
     reqwest::blocking::get(url)?.copy_to(&mut file)?;
 
-    Ok(file_path.to_str().to_owned().ok_or(Error::InvalidPath)?.into())
+    Ok(file_path
+        .to_str()
+        .to_owned()
+        .ok_or(Error::InvalidPath)?
+        .into())
 }

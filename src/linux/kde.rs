@@ -1,4 +1,5 @@
-use crate::{run, Error, Mode, Result};
+use crate::unix::run;
+use crate::{Error, Mode, Result};
 use std::{
     fs::File,
     io::{BufRead, BufReader},

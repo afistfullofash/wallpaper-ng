@@ -1,5 +1,21 @@
 use Result;
 
+pub fn supports_get() -> bool {
+    false
+}
+
+pub fn supports_mode() -> bool {
+    false
+}
+
+pub fn supports_set() -> bool {
+    false
+}
+
+pub fn supports_url() -> bool {
+    false
+}
+
 pub fn get() -> Result<String> {
     Err("unsupported operating system".into())
 }

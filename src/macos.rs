@@ -1,7 +1,30 @@
-use crate::{get_stdout, run, Mode, Result};
+use crate::unix::{get_stdout, run};
+use crate::{Mode, Result};
 
 #[cfg(feature = "from_url")]
 use crate::download_image;
+
+pub fn supports_get() -> bool {
+    true
+}
+
+pub fn supports_mode() -> bool {
+    false
+}
+
+pub fn supports_set() -> bool {
+    true
+}
+
+#[cfg(feature = "from_url")]
+pub fn supports_url() -> bool {
+    true
+}
+
+#[cfg(not(feature = "from_url"))]
+pub fn supports_url() -> bool {
+    false
+}
 
 /// Returns the current wallpaper.
 pub fn get() -> Result<String> {
@@ -15,10 +38,7 @@ pub fn get() -> Result<String> {
 }
 
 // Sets the wallpaper from a file.
-pub fn set_from_path<P>(path: P) -> Result<()>
-where
-    P: AsRef<Path> + std::fmt::Display,
-{
+pub fn set_from_path(path: &str) -> Result<()> {
     run(
         "osascript",
         &[

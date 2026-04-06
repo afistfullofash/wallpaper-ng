@@ -3,40 +3,136 @@ mod kde;
 mod lxde;
 pub(crate) mod xfce;
 
-use crate::{get_stdout, run, Error, Mode, Result};
-use std::{env, path::Path, process::Command};
+use crate::unix::{get_stdout, run};
+use crate::{Error, Mode, Result};
+use std::{env, path::Path};
+use which::which;
 
 #[cfg(feature = "from_url")]
 use crate::download_image;
 
-/// Returns the wallpaper of the current desktop.
-pub fn get() -> Result<String> {
+/// The desktops which are supported
+enum Desktops {
+    Gnome,
+    Kde,
+    Cinnamon,
+    Mate,
+    Xfce,
+    Lxde,
+    Deepin,
+    /// Generic Wayland support (swaybg)
+    Wayland,
+    /// Generic X11 Support (feh)
+    X11,
+    Unsupported,
+}
+
+fn get_desktop() -> Desktops {
     let desktop = env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
 
     if gnome::is_compliant(&desktop) {
-        return gnome::get();
+        return Desktops::Gnome;
     }
 
     match desktop.as_str() {
-        "KDE" => kde::get(),
-        "X-Cinnamon" => parse_dconf(
+        "KDE" => Desktops::Kde,
+        "X-Cinnamon" => Desktops::Cinnamon,
+        "MATE" => Desktops::Mate,
+        "XFCE" => Desktops::Xfce,
+        "LXDE" => Desktops::Lxde,
+        "Deepin" => Desktops::Deepin,
+        _ => {
+            if which("swaybg").is_ok() {
+                Desktops::Wayland
+            } else if which("feh").is_ok() {
+                Desktops::X11
+            } else {
+                Desktops::Unsupported
+            }
+        }
+    }
+}
+
+pub fn supports_mode() -> bool {
+    match get_desktop() {
+        Desktops::Gnome => true,
+        Desktops::Kde => true,
+        Desktops::Cinnamon => true,
+        Desktops::Mate => true,
+        Desktops::Xfce => true,
+        Desktops::Lxde => true,
+        Desktops::Deepin => true,
+        Desktops::Wayland => false,
+        Desktops::X11 => false,
+        Desktops::Unsupported => false,
+    }
+}
+
+pub fn supports_set() -> bool {
+    match get_desktop() {
+        Desktops::Gnome => true,
+        Desktops::Kde => true,
+        Desktops::Cinnamon => true,
+        Desktops::Mate => true,
+        Desktops::Xfce => true,
+        Desktops::Lxde => true,
+        Desktops::Deepin => true,
+        Desktops::Wayland => true,
+        Desktops::X11 => true,
+        Desktops::Unsupported => false,
+    }
+}
+
+pub fn supports_get() -> bool {
+    match get_desktop() {
+        Desktops::Gnome => true,
+        Desktops::Kde => true,
+        Desktops::Cinnamon => true,
+        Desktops::Mate => true,
+        Desktops::Xfce => true,
+        Desktops::Lxde => true,
+        Desktops::Deepin => true,
+        Desktops::Wayland => false,
+        Desktops::X11 => false,
+        Desktops::Unsupported => false,
+    }
+}
+
+#[cfg(feature = "from_url")]
+pub fn supports_url() -> bool {
+    true
+}
+
+#[cfg(not(feature = "from_url"))]
+pub fn supports_url() -> bool {
+    false
+}
+
+/// Returns the wallpaper of the current desktop.
+pub fn get() -> Result<String> {
+    match get_desktop() {
+        Desktops::Gnome => gnome::get(),
+        Desktops::Kde => kde::get(),
+        Desktops::Cinnamon => parse_dconf(
             "gsettings",
             &["get", "org.cinnamon.desktop.background", "picture-uri"],
         ),
-        "MATE" => parse_dconf(
+        Desktops::Mate => parse_dconf(
             "dconf",
             &["read", "/org/mate/desktop/background/picture-filename"],
         ),
-        "XFCE" => xfce::get(),
-        "LXDE" => lxde::get(),
-        "Deepin" => parse_dconf(
+        Desktops::Xfce => xfce::get(),
+        Desktops::Lxde => lxde::get(),
+        Desktops::Deepin => parse_dconf(
             "dconf",
             &[
                 "read",
                 "/com/deepin/wrap/gnome/desktop/background/picture-uri",
             ],
         ),
-        _ => Err(Error::UnsupportedDesktop),
+        Desktops::Wayland => Err(Error::UnsupportedDesktop),
+        Desktops::X11 => Err(Error::UnsupportedDesktop),
+        Desktops::Unsupported => Err(Error::UnsupportedDesktop),
     }
 }
 
@@ -45,15 +141,10 @@ pub fn set_from_path<P>(path: P) -> Result<()>
 where
     P: AsRef<Path> + std::fmt::Display,
 {
-    let desktop = env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
-
-    if gnome::is_compliant(&desktop) {
-        return gnome::set(&path);
-    }
-
-    match desktop.as_str() {
-        "KDE" => kde::set(&path),
-        "X-Cinnamon" => run(
+    match get_desktop() {
+        Desktops::Gnome => gnome::set(&path),
+        Desktops::Kde => kde::set(&path),
+        Desktops::Cinnamon => run(
             "gsettings",
             &[
                 "set",
@@ -62,7 +153,7 @@ where
                 &enquote::enquote('"', &format!("file://{}", &path)),
             ],
         ),
-        "MATE" => run(
+        Desktops::Mate => run(
             "dconf",
             &[
                 "write",
@@ -70,9 +161,9 @@ where
                 &enquote::enquote('"', path.as_ref().to_str().ok_or(Error::InvalidPath)?),
             ],
         ),
-        "XFCE" => xfce::set(path),
-        "LXDE" => lxde::set(path),
-        "Deepin" => run(
+        Desktops::Xfce => xfce::set(path),
+        Desktops::Lxde => lxde::set(path),
+        Desktops::Deepin => run(
             "dconf",
             &[
                 "write",
@@ -80,24 +171,18 @@ where
                 &enquote::enquote('"', &format!("file://{}", &path)),
             ],
         ),
-        _ => {
-            if let Ok(mut child) = Command::new("swaybg")
-                .args(&["-i", path.as_ref().to_str().ok_or(Error::InvalidPath)?])
-                .spawn()
-            {
-                child.stdout = None;
-                child.stderr = None;
-                return Ok(());
-            }
-
-            run(
-                "feh",
-                &[
-                    "--bg-fill",
-                    path.as_ref().to_str().ok_or(Error::InvalidPath)?,
-                ],
-            )
-        }
+        Desktops::Wayland => run(
+            "swaybg",
+            &["-i", path.as_ref().to_str().ok_or(Error::InvalidPath)?],
+        ),
+        Desktops::X11 => run(
+            "feh",
+            &[
+                "--bg-fill",
+                path.as_ref().to_str().ok_or(Error::InvalidPath)?,
+            ],
+        ),
+        Desktops::Unsupported => Err(Error::UnsupportedDesktop),
     }
 }
 
@@ -110,15 +195,10 @@ pub fn set_from_url(url: &str) -> Result<()> {
 
 /// Sets the wallpaper style.
 pub fn set_mode(mode: Mode) -> Result<()> {
-    let desktop = env::var("XDG_CURRENT_DESKTOP").unwrap_or_default();
-
-    if gnome::is_compliant(&desktop) {
-        return gnome::set_mode(mode);
-    }
-
-    match desktop.as_str() {
-        "KDE" => kde::set_mode(mode),
-        "X-Cinnamon" => run(
+    match get_desktop() {
+        Desktops::Gnome => gnome::set_mode(mode),
+        Desktops::Kde => kde::set_mode(mode),
+        Desktops::Cinnamon => run(
             "gsettings",
             &[
                 "set",
@@ -127,7 +207,7 @@ pub fn set_mode(mode: Mode) -> Result<()> {
                 &mode.get_gnome_string(),
             ],
         ),
-        "MATE" => run(
+        Desktops::Mate => run(
             "dconf",
             &[
                 "write",
@@ -135,9 +215,9 @@ pub fn set_mode(mode: Mode) -> Result<()> {
                 &mode.get_gnome_string(),
             ],
         ),
-        "XFCE" => xfce::set_mode(mode),
-        "LXDE" => lxde::set_mode(mode),
-        "Deepin" => run(
+        Desktops::Xfce => xfce::set_mode(mode),
+        Desktops::Lxde => lxde::set_mode(mode),
+        Desktops::Deepin => run(
             "dconf",
             &[
                 "write",
@@ -145,7 +225,9 @@ pub fn set_mode(mode: Mode) -> Result<()> {
                 &mode.get_gnome_string(),
             ],
         ),
-        _ => Err(Error::UnsupportedDesktop),
+        Desktops::Wayland => Err(Error::UnsupportedDesktop),
+        Desktops::X11 => Err(Error::UnsupportedDesktop),
+        Desktops::Unsupported => Err(Error::UnsupportedDesktop),
     }
 }
 

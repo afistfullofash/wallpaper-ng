@@ -1,4 +1,4 @@
-# wallpaper
+# wallpaper-bce
 
 This Rust library gets and sets the desktop wallpaper/background.
 
@@ -20,12 +20,12 @@ The supported desktops are:
 
 ## Credits
 
-This project is a maintained fork of the [wallpaper](https://github.com/reujab/wallpaper.rs) crate. We would like to acknowledge the work of the original authors, who dedicated their code to the public domain via The Unlicense.
+This project is a fork of the [wallpaper-ng](https://github.com/davidpob99/wallpaper-ng) crate. We would like to acknowledge the work of the original authors.
 
 ## Examples
 
 ```rust
-use wallpaper;
+use wallpaper_bce as wallpaper;
 
 fn main() {
     // Returns the wallpaper of the current desktop.
@@ -49,7 +49,7 @@ wallpaper = { version = "3", features = ["from_url"] }
 Then, on your main.rs:
 
 ```rust
-use wallpaper;
+use wallpaper_bce as wallpaper;
 
 fn main() {
     // Returns the wallpaper of the current desktop.

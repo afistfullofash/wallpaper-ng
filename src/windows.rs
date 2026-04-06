@@ -16,6 +16,28 @@ use winreg::RegKey;
 #[cfg(feature = "from_url")]
 use crate::download_image;
 
+pub fn supports_get() -> bool {
+    true
+}
+
+pub fn supports_mode() -> bool {
+    true
+}
+
+pub fn supports_set() -> bool {
+    true
+}
+
+#[cfg(feature = "from_url")]
+pub fn supports_url() -> bool {
+    true
+}
+
+#[cfg(not(feature = "from_url"))]
+pub fn supports_url() -> bool {
+    false
+}
+
 /// Returns the current wallpaper.
 pub fn get() -> Result<String> {
     unsafe {
